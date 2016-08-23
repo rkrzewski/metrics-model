@@ -1,7 +1,5 @@
 package metrics
 
-import shapeless._
-
 sealed trait Metric
 
 sealed trait Gauge extends Metric

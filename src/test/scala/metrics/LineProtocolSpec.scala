@@ -3,11 +3,7 @@ package metrics
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
 import shapeless._
-import record._
-import ops.record._
-import ops.hlist._
 import syntax.singleton._
-import labelled._
 
 class LineProtocolSpec extends FlatSpec {
   import LineProtocol._
