@@ -32,26 +32,28 @@ object LineProtocol {
 
   object WriteMetric {
     implicit def fields[M <: Metric, H1 <: HList, H2 <: HList](implicit lgen: LabelledGeneric.Aux[M, H1],
-      mapper: Mapper.Aux[writeField.type, H1, H2], toTrav: ToTraversable.Aux[H2, List, String]): WriteMetric[M] = new WriteMetric[M] {
-      def writeMetric(m: M) = lgen.to(m).map(writeField).toList.mkString(",")
-    }
+      mapper: Mapper.Aux[writeField.type, H1, H2], toTrav: ToTraversable.Aux[H2, List, String]) =
+      new WriteMetric[M] {
+        def writeMetric(m: M) =
+          lgen.to(m).map(writeField).toList.mkString(",")
+      }
 
-    implicit def types[M <: Metric, C <: Coproduct](implicit lgen: Generic.Aux[M, C],
-      wm: WriteMetric[C]): WriteMetric[M] = new WriteMetric[M] {
-      def writeMetric(m: M) = wm.writeMetric(lgen.to(m))
-    }
+    implicit def types[M <: Metric, C <: Coproduct](implicit gen: Generic.Aux[M, C], wm: WriteMetric[C]) =
+      new WriteMetric[M] {
+        def writeMetric(m: M) = wm.writeMetric(gen.to(m))
+      }
 
     implicit def cnil: WriteMetric[CNil] = new WriteMetric[CNil] {
-      def writeMetric(m: CNil) = ??? // shouldn't ever get here, right?
+      def writeMetric(m: CNil) = ??? // never reached
     }
 
-    implicit def ccons[H, T <: Coproduct](implicit wmh: WriteMetric[H],
-      wmt: WriteMetric[T]): WriteMetric[H :+: T] = new WriteMetric[H :+: T] {
-      def writeMetric(c: H :+: T) = c match {
-        case Inl(h) => wmh.writeMetric(h)
-        case Inr(t) => wmt.writeMetric(t)
+    implicit def ccons[H, T <: Coproduct](implicit wmh: WriteMetric[H], wmt: WriteMetric[T]) =
+      new WriteMetric[H :+: T] {
+        def writeMetric(c: H :+: T) = c match {
+          case Inl(h) => wmh.writeMetric(h)
+          case Inr(t) => wmt.writeMetric(t)
+        }
       }
-    }
   }
 
   def writeMetric[M](m: M)(implicit wm: WriteMetric[M]): String =
@@ -61,8 +63,8 @@ object LineProtocol {
     implicit def default[K <: Symbol, M <: Metric, MM <: Map[String, M]](
       implicit kw: Witness.Aux[K], wm: WriteMetric[M]): Case.Aux[FieldType[K, MM], Seq[(String, String)]] =
       at[FieldType[K, MM]](mm => mm.map {
-      case (l, v) => (s"${kw.value.name}.${l}", writeMetric(v.asInstanceOf[M]))
-    }.toSeq)
+        case (l, v) => (s"${kw.value.name}.${l}", writeMetric(v.asInstanceOf[M]))
+      }.toSeq)
   }
 
   def writeMetrics[H1 <: HList, H2 <: HList](m: Metrics, tags: String, timestamp: String)(
