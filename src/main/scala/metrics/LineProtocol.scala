@@ -58,11 +58,11 @@ object LineProtocol {
     wm.writeMetric(m)
 
   object writeMetricsMapField extends Poly1 {
-    implicit def default[K <: Symbol, V <: Metric, M <: Map[String, V]](
-      implicit kw: Witness.Aux[K], wm: WriteMetric[V]): Case.Aux[FieldType[K, M], Seq[(String, String)]] =
-      at[FieldType[K, M]](m => m.map {
-        case (l, v) => (s"${kw.value.name}.${l}", writeMetric(v.asInstanceOf[V]))
-      }.toSeq)
+    implicit def default[K <: Symbol, M <: Metric, MM <: Map[String, M]](
+      implicit kw: Witness.Aux[K], wm: WriteMetric[M]): Case.Aux[FieldType[K, MM], Seq[(String, String)]] =
+      at[FieldType[K, MM]](mm => mm.map {
+      case (l, v) => (s"${kw.value.name}.${l}", writeMetric(v.asInstanceOf[M]))
+    }.toSeq)
   }
 
   def writeMetrics[H1 <: HList, H2 <: HList](m: Metrics, tags: String, timestamp: String)(
