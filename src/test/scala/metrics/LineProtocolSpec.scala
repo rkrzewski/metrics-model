@@ -73,12 +73,12 @@ class LineProtocolSpec extends FlatSpec {
 
   ignore should "write any Gauges" in {
     val gauge: Gauge = FailedGauge("ERROR")
-    // writeMetric(gauge) shouldBe "error=\"ERROR\""
+    writeMetric(gauge) shouldBe "error=\"ERROR\""
   }
 
   ignore should "write any Metric" in {
     val metric: Metric = Counter(100l)
-    // writeMetric(metric) shouldBe "count=100i"
+    writeMetric(metric) shouldBe "count=100i"
   }
 
   // Map[String, M <: Metric] fields
