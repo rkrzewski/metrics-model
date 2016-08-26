@@ -95,10 +95,10 @@ class LineProtocolSpec extends FlatSpec {
 
   // Metrics instances
 
-  ignore should "write Metrics" in {
+  it should "write Metrics" in {
     val metrics = Metrics(Map(), Map("c1" -> Counter(1), "c2" -> Counter(100)), Map(), Map(), Map())
-    // writeMetrics(metrics, ",env=prod", "1471893022000") shouldBe 
-    //   """|counters.c1,env=prod count=1i 1471893022000
-    //      |counters.c2,env=prod count=100i 1471893022000""".stripMargin)
+    writeMetrics(metrics, ",env=prod", "1471893022000") shouldBe
+      """|counters.c1,env=prod count=1i 1471893022000
+         |counters.c2,env=prod count=100i 1471893022000""".stripMargin
   }
 }
