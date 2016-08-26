@@ -11,17 +11,7 @@ and another facility for encoding their contents into [InfluxDB](https://docs.in
 * [Shapeless](https://github.com/milessabin/shapeless) for conversion to line protocol
 * [ScalaTest](http://www.scalatest.org/) for running tests
 
-## Help wanted!
-
-I was trying to follow ["minimal JSON writer"](http://kanaka.io/blog/2015/11/10/shapeless-not-a-tutorial-part-2.html#section_4)
-example from Valentin Kasas' blog when implementing my converter to line protocol,
-but this is my first attempt at using Shapeless and I'm having much trouble with
-it. I managed to get the code of the converter to compile, but it when I'm
-attempting to use it, compiler complains about multiple missing implicits.
-Unfortunately, after spending many hours reading Shapeless Wiki, StackOverflow
-and Shapeless sources I'm still unable to determine if the failing code contains
-a trivial mistake, or if it's nonsensical wishful thinking, and a completely
-different abstractions need to be used.
+Many thanks to Alec Zorab and Miles Sabin for answering my questions on gitter!
 
 ## Caveats
 
