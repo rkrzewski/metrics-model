@@ -4,8 +4,8 @@ version := "1.0.0-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 val shapelessVersion = "2.3.2"
-val circeVersion = "0.5.0-M3"
-val scalaTestVersion = "3.0.0"
+val circeVersion = "0.6.1"
+val scalaTestVersion = "3.0.1"
 
 libraryDependencies ++= Seq(
     "com.chuusai" %% "shapeless" % shapelessVersion,

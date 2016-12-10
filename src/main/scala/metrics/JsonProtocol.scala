@@ -1,8 +1,6 @@
 package metrics
 
-import cats.data.Xor
-import io.circe.Error
-import io.circe.Decoder
+import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.parser._
 
@@ -36,7 +34,7 @@ object JsonProtocol {
   
   implicit val decodeMetrics: Decoder[Metrics] = deriveDecoder[Metrics]
   
-  def readMetrics(json: String): Xor[Error, Metrics] = 
+  def readMetrics(json: String): Either[Error, Metrics] = 
     decode[Metrics](json)
     
 }

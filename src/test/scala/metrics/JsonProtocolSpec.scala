@@ -3,8 +3,8 @@ package metrics
 import java.util.concurrent.TimeUnit
 
 import scala.BigDecimal
+import scala.util.Right
 
-import cats.data.Xor
 import io.circe.parser._
 import io.circe.syntax._
 import org.scalatest.FlatSpec
@@ -17,8 +17,8 @@ class JsonProtocolSpec extends FlatSpec {
     val Numeric = NumericGauge(BigDecimal(100))
     decode[NumericGauge]("""{
       "value":100
-    }""").toOption should matchPattern {
-      case Some(Numeric) =>
+    }""") should matchPattern {
+      case Right(Numeric) =>
     }
   }
   
@@ -26,8 +26,8 @@ class JsonProtocolSpec extends FlatSpec {
     val Strings = StringsGauge(Seq("a", "b"))
     decode[StringsGauge]("""{
       "value":["a","b"]
-    }""").toOption should matchPattern {
-      case Some(Strings) =>
+    }""") should matchPattern {
+      case Right(Strings) =>
     }
   }
 
@@ -35,8 +35,8 @@ class JsonProtocolSpec extends FlatSpec {
     val Failed = FailedGauge("error")
     decode[FailedGauge]("""{
       "error":"error"
-    }""").toOption should matchPattern {
-      case Some(Failed) =>
+    }""") should matchPattern {
+      case Right(Failed) =>
     }
   }
 
@@ -51,7 +51,7 @@ class JsonProtocolSpec extends FlatSpec {
     },{
       "error":"error"
     }]""") should matchPattern {
-      case Xor.Right(Seq(Numeric, Strings, Failed)) =>
+      case Right(Seq(Numeric, Strings, Failed)) =>
     }
   }
     
@@ -63,8 +63,8 @@ class JsonProtocolSpec extends FlatSpec {
       "histograms":{},
       "meters":{},
       "timers":{}
-    }""").toOption should matchPattern {
-      case Some(Metrics(_, _, _, _, _)) =>
+    }""") should matchPattern {
+      case Right(Metrics(_, _, _, _, _)) =>
     }
   }
 
@@ -80,7 +80,7 @@ class JsonProtocolSpec extends FlatSpec {
       "histograms":{},
       "meters":{},
       "timers":{}
-    }""").toOption.flatMap(_.gauges.get("g1")) should matchPattern {
+    }""").right.toOption.flatMap(_.gauges.get("g1")) should matchPattern {
       case Some(Successful) =>
     }
   }
@@ -96,7 +96,7 @@ class JsonProtocolSpec extends FlatSpec {
       "histograms":{},
       "meters":{},
       "timers":{}
-    }""").toOption.flatMap(_.counters.get("c1")) should matchPattern {
+    }""").right.toOption.flatMap(_.counters.get("c1")) should matchPattern {
       case Some(Counter(1)) =>
     }
   }
@@ -122,7 +122,7 @@ class JsonProtocolSpec extends FlatSpec {
       },
       "meters":{},
       "timers":{}
-    }""").toOption.flatMap(_.histograms.get("h1")) should matchPattern {
+    }""").right.toOption.flatMap(_.histograms.get("h1")) should matchPattern {
       case Some(Histogram(10, 1, 100, 25.55, 12.22, 50, 75, 95, 98, 99, 99.9)) =>
     }
   }
@@ -143,7 +143,7 @@ class JsonProtocolSpec extends FlatSpec {
         }
       },
       "timers":{}
-    }""").toOption.flatMap(_.meters.get("m1.200")) should matchPattern {
+    }""").right.toOption.flatMap(_.meters.get("m1.200")) should matchPattern {
       case Some(Meter(10000, 12.5, 12.5, 12.5, 12.5, _)) =>
     }
   }
@@ -175,7 +175,7 @@ class JsonProtocolSpec extends FlatSpec {
           "rate_units":"events/second"
         }
       }
-    }""").toOption.flatMap(_.timers.get("t1")) should matchPattern {
+    }""").right.toOption.flatMap(_.timers.get("t1")) should matchPattern {
       case Some(Timer(10, 1, 100, 25.55, 12.22, 50, 75, 95, 98, 99, 99.9,
         12.5, 12.5, 12.5, 12.5, "milliseconds", "events/second")) =>
     }
