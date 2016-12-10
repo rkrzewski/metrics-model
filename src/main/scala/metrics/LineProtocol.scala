@@ -62,10 +62,17 @@ object LineProtocol {
     wm.writeMetric(m)
 
   object writeMetricsMapField extends Poly1 {
+    val nonAlnum = "[\\P{Alnum}_]+".r
+
+    val underscoreSeq = "_+".r
+
+    def normalizedName(n: String): String =
+      underscoreSeq.replaceAllIn(nonAlnum.replaceAllIn(n, "_"), "_")
+
     implicit def default[K <: Symbol, M <: Metric](
       implicit kw: Witness.Aux[K], wm: WriteMetric[M]) =
       at[FieldType[K, Map[String, M]]](mm => mm.map {
-        case (l, v) => (s"${kw.value.name}.${l}", writeMetric(v.asInstanceOf[M]))
+        case (l, v) => (s"${kw.value.name}_${normalizedName(l)}", writeMetric(v.asInstanceOf[M]))
       }.toList)
   }
 

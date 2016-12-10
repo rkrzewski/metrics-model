@@ -85,12 +85,17 @@ class LineProtocolSpec extends FlatSpec {
   
   it should "write Map[String, Counter] fields" in {
     val counters = Map[String, Counter]("c1" -> Counter(10), "c2" -> Counter(20))
-    writeMetricsMapField('counters ->> counters) shouldBe Seq(("counters.c1", "count=10i"), ("counters.c2", "count=20i"))
+    writeMetricsMapField('counters ->> counters) shouldBe Seq(("counters_c1", "count=10i"), ("counters_c2", "count=20i"))
+  }
+
+  it should "nomralize metric names" in {
+    val counters = Map[String, Counter]("a-b" -> Counter(10), "c+ε" -> Counter(20))
+    writeMetricsMapField('counters ->> counters) shouldBe Seq(("counters_a_b", "count=10i"), ("counters_c_", "count=20i"))
   }
 
   it should "write Map[String, Gauge] fields" in {
     val gauges = Map[String, Gauge]("g1" -> NumericGauge(BigDecimal(10)), "g2" -> NumericGauge(BigDecimal(0.5)))
-    writeMetricsMapField('gauges ->> gauges) shouldBe Seq(("gauges.g1", "value=10"), ("gauges.g2", "value=0.5"))
+    writeMetricsMapField('gauges ->> gauges) shouldBe Seq(("gauges_g1", "value=10"), ("gauges_g2", "value=0.5"))
   }
 
   // Metrics instances
@@ -98,7 +103,7 @@ class LineProtocolSpec extends FlatSpec {
   it should "write Metrics" in {
     val metrics = Metrics(Map(), Map("c1" -> Counter(1), "c2" -> Counter(100)), Map(), Map(), Map())
     writeMetrics(metrics, ",env=prod", "1471893022000") shouldBe
-      """|counters.c1,env=prod count=1i 1471893022000
-         |counters.c2,env=prod count=100i 1471893022000""".stripMargin
+      """|counters_c1,env=prod count=1i 1471893022000
+         |counters_c2,env=prod count=100i 1471893022000""".stripMargin
   }
 }
