@@ -5,18 +5,21 @@ import ops.hlist._
 import labelled.FieldType
 
 object LineProtocol {
-
   object writeValue extends Poly1 {
-    implicit def caseLong: Case.Aux[Long, String] =
-      at[Long](x => x.toString + "i")
-    implicit def caseDouble: Case.Aux[Double, String] =
-      at[Double](x => x.toString)
-    implicit def caseBigDecimal: Case.Aux[BigDecimal, String] =
-      at[BigDecimal](x => x.toString)
-    implicit def caseString: Case.Aux[String, String] =
-      at[String](x => "\"" + x.replaceAll("\"", "\\\\\"") + "\"")
-    implicit def caseStringSeq: Case.Aux[Seq[String], String] =
-      at[Seq[String]](x => "\"" + x.mkString(",").replaceAll("\"", "\\\\\"") + "\"")
+    implicit def caseLong =
+      at[Long](_.toString + "i")
+
+    implicit def caseDouble =
+      at[Double](_.toString)
+
+    implicit def caseBigDecimal =
+      at[BigDecimal](_.toString)
+
+    implicit def caseString =
+      at[String]("\"" + _.replaceAll("\"", "\\\\\"") + "\"")
+
+    implicit def caseStringSeq =
+      at[Seq[String]]("\"" + _.mkString(",").replaceAll("\"", "\\\\\"") + "\"")
   }
 
   trait WriteMetric[M] {
@@ -63,8 +66,7 @@ object LineProtocol {
     }
   }
 
-  def writeMetric[M](m: M)(implicit wm: WriteMetric[M]): String =
-    wm.writeMetric(m)
+  def writeMetric[M](m: M)(implicit wm: WriteMetric[M]) = wm.writeMetric(m)
 
   object writeMetricsMapField extends Poly1 {
     val nonAlnum = "[\\P{Alnum}_]+".r
@@ -75,10 +77,13 @@ object LineProtocol {
       underscoreSeq.replaceAllIn(nonAlnum.replaceAllIn(n, "_"), "_")
 
     implicit def default[K <: Symbol, M <: Metric](
-      implicit kw: Witness.Aux[K], wm: WriteMetric[M]) =
-      at[FieldType[K, Map[String, M]]](mm => mm.map {
-        case (l, v) => (s"${kw.value.name}_${normalizedName(l)}", writeMetric(v.asInstanceOf[M]))
-      }.toList)
+      implicit kw: Witness.Aux[K],
+      wm: WriteMetric[M]) =
+      at[FieldType[K, Map[String, M]]](mm =>
+        mm.map {
+          case (l, v) =>
+            (s"${kw.value.name}_${normalizedName(l)}", writeMetric(v.asInstanceOf[M]))
+        }.toList)
   }
 
   def writeMetrics[H1 <: HList, H2 <: HList](m: Metrics, tags: String, timestamp: String)(
@@ -87,8 +92,8 @@ object LineProtocol {
     toTrav: ToTraversable.Aux[H2, List, List[(String, String)]]) = {
     implicit val mapper = lmapper.value
     lgen.to(m).map(writeMetricsMapField).toList.flatten.map {
-      case (l, v) => s"${l}${tags} ${v} ${timestamp}"
+      case (l, v) =>
+        s"${l}${tags} ${v} ${timestamp}"
     }.mkString("\n")
   }
-
 }
