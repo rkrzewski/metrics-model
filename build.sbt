@@ -2,7 +2,9 @@ organization := "pl.caltha"
 name := "metrics-model"
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
+crossScalaVersions := Seq("2.11.8", "2.12.1")
+
 val shapelessVersion = "2.3.2"
 val circeVersion = "0.6.1"
 val scalaTestVersion = "3.0.1"
