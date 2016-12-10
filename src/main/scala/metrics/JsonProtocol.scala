@@ -14,14 +14,16 @@ object JsonProtocol {
   
   implicit val decodeGauge: Decoder[Gauge] =
     Decoder.decodeJsonObject.flatMap { jo =>
-      jo.kleisli.run("value").map(j => j.isArray) match {
-        case Some(true) =>
-          decodeStringsGauge.map(_.asInstanceOf[Gauge])
-        case Some(false) =>
-          decodeNumericGauge.map(_.asInstanceOf[Gauge])
-        case None =>
-          decodeFailedGauge.map(_.asInstanceOf[Gauge])
-      }
+      val dec: Decoder[_ <: Gauge] =
+        jo.kleisli.run("value").map(j => j.isArray) match {
+          case Some(true) =>
+            decodeStringsGauge
+          case Some(false) =>
+            decodeNumericGauge
+          case None =>
+            decodeFailedGauge
+        }
+      dec.map(_.asInstanceOf[Gauge])
     }
   
   implicit val decodeCounter: Decoder[Counter] = deriveDecoder[Counter]
