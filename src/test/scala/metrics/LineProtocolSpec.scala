@@ -30,12 +30,6 @@ class LineProtocolSpec extends FlatSpec {
     writeValue(Seq("One", "Two")) shouldBe "\"One,Two\""
   }
 
-  // fields
-
-  it should "write Long fields" in {
-    writeField('count ->> 10l) shouldBe "count=10i"
-  }
-
   // concrete Metric instances
 
   it should "write NumericGauges" in {

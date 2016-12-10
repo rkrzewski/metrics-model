@@ -19,43 +19,48 @@ object LineProtocol {
       at[Seq[String]](x => "\"" + x.mkString(",").replaceAll("\"", "\\\\\"") + "\"")
   }
 
-  object writeField extends Poly1 {
-    implicit def default[K <: Symbol, V](
-      implicit kw: Witness.Aux[K],
-      wv: writeValue.Case.Aux[V, String]): Case.Aux[FieldType[K, V], String] =
-      at[FieldType[K, V]](field => s"${kw.value.name}=${wv(field.asInstanceOf[V])}")
-  }
-
   trait WriteMetric[M] {
     def writeMetric(m: M): String
   }
 
-  object WriteMetric {
-    implicit def fields[M <: Metric, H1 <: HList, H2 <: HList](implicit lgen: LabelledGeneric.Aux[M, H1],
-      lmapper: Lazy[Mapper.Aux[writeField.type, H1, H2]], toTrav: ToTraversable.Aux[H2, List, String]) =
-      new WriteMetric[M] {
-        def writeMetric(m: M) = {
-          implicit val mapper = lmapper.value
-          lgen.to(m).map(writeField).toList.mkString(",")
+  object WriteMetric extends LabelledTypeClassCompanion[WriteMetric] {
+    implicit def field[T](implicit wv: writeValue.Case.Aux[T, String]) =
+      new WriteMetric[T] {
+        def writeMetric(f: T) = wv(f)
+      }
+
+    object typeClass extends LabelledTypeClass[WriteMetric] {
+      def emptyProduct: WriteMetric[HNil] =
+        new WriteMetric[HNil] {
+          def writeMetric(n: HNil) = ???
         }
-      }
 
-    implicit def types[M <: Metric, C <: Coproduct](implicit gen: Generic.Aux[M, C], wm: Lazy[WriteMetric[C]]) =
-      new WriteMetric[M] {
-        def writeMetric(m: M) = wm.value.writeMetric(gen.to(m))
-      }
+      def product[H, T <: HList](name: String, ch: WriteMetric[H], ct: WriteMetric[T]) =
+        new WriteMetric[H :: T] {
+          def writeMetric(hl: H :: T) = hl match {
+            case h :: HNil => s"${name}=${ch.writeMetric(h)}"
+            case h :: t => s"${name}=${ch.writeMetric(h)},${ct.writeMetric(t)}"
+          }
+        }
 
-    implicit def cnil: WriteMetric[CNil] = new WriteMetric[CNil] {
-      def writeMetric(m: CNil) = ??? // never reached
+      def emptyCoproduct =
+        new WriteMetric[CNil] {
+          def writeMetric(n: CNil) = ???
+        }
+
+      def coproduct[L, R <: Coproduct](name: String, cl: ⇒ WriteMetric[L], cr: ⇒ WriteMetric[R]) =
+        new WriteMetric[L :+: R] {
+          def writeMetric(cp: L :+: R) = cp match {
+            case Inl(l) => cl.writeMetric(l)
+            case Inr(r) => cr.writeMetric(r)
+          }
+        }
+
+      def project[F, G](instance: ⇒ WriteMetric[G], to: F ⇒ G, from: G ⇒ F) =
+        new WriteMetric[F] {
+          def writeMetric(f: F) = instance.writeMetric(to(f))
+        }
     }
-
-    implicit def ccons[H, T <: Coproduct](implicit wmh: Lazy[WriteMetric[H]], wmt: Lazy[WriteMetric[T]]) =
-      new WriteMetric[H :+: T] {
-        def writeMetric(c: H :+: T) = c match {
-          case Inl(h) => wmh.value.writeMetric(h)
-          case Inr(t) => wmt.value.writeMetric(t)
-        }
-      }
   }
 
   def writeMetric[M](m: M)(implicit wm: WriteMetric[M]): String =
